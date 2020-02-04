@@ -93,7 +93,7 @@ class CblActivity : AppCompatActivity() {
     }
 
     private fun randomPokemon() =
-        listOf("Pikachu", "Squirtle", "Eevee", "Bulbasaur", "Arcanine", "Charizard", "Gastly", null).random()
+        listOf("Pikachu", "Squirtle", "Eevee", "Bulbasaur", "Arcanine", "Charizard", "Gastly").random()
 
     private fun runInsert() = Single.fromCallable {
         database.inBatch {

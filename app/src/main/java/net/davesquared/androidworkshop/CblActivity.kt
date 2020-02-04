@@ -93,21 +93,28 @@ class CblActivity : AppCompatActivity() {
     }
 
     private fun randomPokemon() =
-        listOf("Pikachu", "Squirtle", "Eevee", "Bulbasaur", "Arcanine", "Charizard", "Gastly").random()
+        listOf(
+            "Pikachu",
+            "Squirtle",
+            "Eevee",
+            "Bulbasaur",
+            "Arcanine",
+            "Charizard",
+            "Gastly"
+        ).random()
 
     private fun runInsert() = Single.fromCallable {
-        database.inBatch {
-            repeat(15000) {
-                val p = randomPokemon()
-                val doc = MutableDocument()
-                doc.setString("name", "Doc-$p")
-                if (p != null) {
-                    doc.setValue(
-                        "data",
-                        mapOf("type" to p, "version" to "1.2", "class" to "pokemon")
-                    )
+        val data = (0..1000).joinToString(",")
+        repeat(1) { // <- Change to vary how many batches of 1000 records are inserted. On Nexus 5X, 3000 records are enough to trigger i/o exception for query
+            database.inBatch {
+                repeat(1000) {
+                    val p = randomPokemon()
+                    val doc = MutableDocument()
+                    // When `data` field is removed, more records are required to trigger i/o exception for query.
+                    doc.setString("data", data)
+                    doc.setString("type", p)
+                    database.save(doc)
                 }
-                database.save(doc)
             }
         }
         database.count
@@ -116,21 +123,20 @@ class CblActivity : AppCompatActivity() {
     private fun runQuery() = Single.fromCallable {
         val result = QueryBuilder
             .select(
-                SelectResult.property("data"),
+                SelectResult.property("type"),
                 SelectResult.expression(Function.count(Expression.string("*")))
             )
             .from(
                 DataSource.database(database)
             )
-            .groupBy(Expression.property("data"))
+            // Removing .groupBy causes query to work without i/o exception
+            .groupBy(Expression.property("type"))
             .execute()
 
         result.allResults()
             .sortedBy { it.getInt(1) }
             .joinToString("\n") { r ->
-                "${r.getDictionary("data")?.getString("type")} ${r.getInt(
-                    1
-                )}"
+                "${r.getString("type")} ${r.getInt(1)}"
             }
     }
 

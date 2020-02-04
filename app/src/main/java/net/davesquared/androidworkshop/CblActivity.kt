@@ -93,11 +93,12 @@ class CblActivity : AppCompatActivity() {
     }
 
     private fun randomPokemon() =
-        listOf("Pikachu", "Squirtle", "Eevee", "Bulbasaur", "Arcanine", "Charizard", null).random()
+        listOf("Pikachu", "Squirtle", "Eevee", "Bulbasaur", "Arcanine", "Charizard", "Gastly", null).random()
 
     private fun runInsert() = Single.fromCallable {
         database.inBatch {
-            (0..14000).map { randomPokemon() }.forEach { p ->
+            repeat(15000) {
+                val p = randomPokemon()
                 val doc = MutableDocument()
                 doc.setString("name", "Doc-$p")
                 if (p != null) {
